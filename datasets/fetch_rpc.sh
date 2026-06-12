@@ -22,7 +22,9 @@ echo "=== fetch_rpc starting at $(date -u) ==="
 apt-get update >/dev/null 2>&1 || true
 apt-get install -y curl unzip python3 python3-pip >/dev/null 2>&1 || true
 
-DL=/tmp/dl
+# Work on the boot disk, NOT tmpfs. The boot disk is 80 GB; RAM on the fetcher
+# is small, so anything memory-backed will OOM on a 30 GB dataset.
+DL=/var/tmp/dl
 mkdir -p "$DL/raw" "$DL/extracted"
 cd "$DL/raw"
 
@@ -35,17 +37,28 @@ if gsutil -q stat "$BUCKET/_secrets/kaggle.json"; then
   gsutil cp "$BUCKET/_secrets/kaggle.json" ~/.kaggle/kaggle.json
   chmod 600 ~/.kaggle/kaggle.json
 
-  # The exact Kaggle slug for RPC was historically diyer22/retail-product-checkout-dataset
-  # (mirror published 2019). The CLI returns non-zero if the slug 404s; we catch that
-  # and fall through to the github source.
+  # IMPORTANT: download WITHOUT --unzip. The --unzip flag streams decompression
+  # through memory and OOM-killed the e2-small. We download the zip to disk,
+  # upload the raw zip to GCS first (so the data is safe even if extraction
+  # later fails), then unzip from disk to disk.
+  echo "=== downloading RPC zip (no --unzip) ==="
   if kaggle datasets download -d diyer22/retail-product-checkout-dataset \
-       --path "$DL/raw" --unzip 2>&1 | tee /tmp/kaggle.log; then
+       --path "$DL/raw" 2>&1 | tee /tmp/kaggle.log; then
     echo "Kaggle download succeeded"
-    # Files unzip directly into $DL/raw/ — copy to extracted/.
-    cp -r "$DL/raw/." "$DL/extracted/"
+    ls -lh "$DL/raw"
+
+    # Safety net: stash the raw archive(s) in the bucket before extracting.
+    echo "=== uploading raw archive(s) -> $DEST/raw/ ==="
+    gsutil -m cp "$DL/raw"/*.zip "$DEST/raw/" 2>/dev/null || true
+
+    echo "=== extracting on disk ==="
+    for z in "$DL/raw"/*.zip; do
+      echo "unzip $z"
+      unzip -q -o "$z" -d "$DL/extracted"
+    done
   else
     echo "WARN: Kaggle download failed; trying secondary source"
-    rm -rf "$DL/raw"/* "$DL/extracted"/*
+    rm -rf "${DL:?}/raw"/* "${DL:?}/extracted"/*
   fi
 else
   echo "no Kaggle token at $BUCKET/_secrets/kaggle.json — skipping Kaggle source"

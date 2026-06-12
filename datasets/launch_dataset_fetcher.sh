@@ -23,7 +23,8 @@ SERVICE_ACCOUNT="${SERVICE_ACCOUNT:-${PROJECT_NUMBER}-compute@developer.gservice
 # COCO 2017 has 164k tiny files; the upload is CPU-bound serializing them, so it
 # needs the parallelism of a bigger machine to finish in <30 min instead of ~5 h.
 case "$DATASET" in
-  coco2017) MACHINE_TYPE_DEFAULT=e2-standard-8 ;;
+  coco2017) MACHINE_TYPE_DEFAULT=e2-standard-8 ;;   # 164k tiny files, upload CPU-bound
+  rpc)      MACHINE_TYPE_DEFAULT=e2-standard-4 ;;    # ~30 GB zip; needs RAM for unzip (e2-small OOM'd)
   *)        MACHINE_TYPE_DEFAULT=e2-small ;;
 esac
 MACHINE_TYPE="${MACHINE_TYPE:-$MACHINE_TYPE_DEFAULT}"
