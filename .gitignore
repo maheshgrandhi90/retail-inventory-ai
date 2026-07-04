@@ -54,6 +54,19 @@ classification/preds*.csv
 !classification/artifacts/**/train.log
 !classification/artifacts/**/gate.log
 
+# Module 2b (retrieval) + dashboard: large SWIN/FAISS assets and generated stores.
+# These are provisioned from the teammate repo (Git LFS) or GCS — see retrieval/README.md.
+# The small model config JSONs ARE committed (they document the exact encoder/preprocessor).
+retrieval/assets/swin_faiss_index.bin
+retrieval/assets/swin_full_embeddings.npy
+retrieval/assets/swin_faiss_indexed_image_paths.csv
+retrieval/assets/labels/
+retrieval/assets/swin_model_assets/*.safetensors
+retrieval/assets/swin_model_assets/*.bin
+inventory.db
+unknown_crops/
+frontend/sample_images/
+
 # Datasets auto-downloaded locally for one-off testing.
 # (datasets/ in the repo holds infra scripts only; never raw data.)
 datasets/cache/

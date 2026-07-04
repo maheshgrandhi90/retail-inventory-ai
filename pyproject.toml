@@ -40,6 +40,19 @@ autolabel = [
     "google-genai>=0.3",
     "ollama>=0.3",
 ]
+# Module 2b — SWIN + FAISS retrieval classification + Streamlit analytics/BI dashboard.
+# Alternative to the trained classifier: embed crops with SWIN, nearest-neighbour search a
+# FAISS index of ~692k labeled crops. Runs the dashboard (frontend/app.py) end-to-end.
+retrieval = [
+    "torch>=2.2",
+    "torchvision>=0.17",
+    "transformers>=4.40",
+    "faiss-cpu>=1.8",
+    "ultralytics>=8.2",
+    "streamlit>=1.33",
+    "plotly>=5.20",
+    "requests>=2.31",
+]
 # Module 4 — backend (FastAPI + SQLite)
 backend = [
     "fastapi>=0.110",
@@ -69,7 +82,7 @@ dev = [
     "ruff>=0.4",
 ]
 all = [
-    "retail-inventory-ai[detection,classification,autolabel,backend,bi,frontend,dev]",
+    "retail-inventory-ai[detection,classification,autolabel,retrieval,backend,bi,frontend,dev]",
 ]
 
 [tool.ruff]
